@@ -1,0 +1,7 @@
+# создаем виртуальное окружение, если нет
+python3 -m venv .venv --prompt VirtualEnv
+# активируем виртуальное окружение 
+source .venv/bin/activate
+# ставим модуль beautifulsoup4
+python3 -m pip install -U beautifulsoup4
+
