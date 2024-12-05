@@ -3,35 +3,32 @@
 import os
 import sys
 from bs4 import BeautifulSoup
+import hashlib
 
-def find_web_files(directory):
-    #return [f for f in os.listdir(directory) if (f.endswith('.html') or f.endswith('.htm'))]
-    with os.scandir(directory) as it:
-        names = [f for f in it if f.is_file() and (f.name.endswith('.html') or f.name.endswith('.htm'))]
-    return names
+data_table = {}
 
 def get_options(div, card_header_text_white):
-    print("*"*80)
-    #print(div.text)
-    #print(div.prettify())
     nquestion = div.find('span', class_ = 'badge badge-pill badge-light mr-2').text
     question_text = div.find('div', class_ = card_header_text_white).text
     question = question_text.replace(nquestion, '')
-    question_only = question.strip()
-    options = div.find_all('div', class_ = 'd-flex w-100')
-    print(question_only)
-    print("*"*80)
-    for option in options:
-        #print(option.prettify())
-        if None != option.find('i', class_ = 'fa fas fa-check'):
-            check_flag = "+"
-        else:
-            check_flag = " "                    
-        #answer_text = option.find('div', class_ = 'col').prettify()
-        answer_text = option.text
-        print(f"{check_flag} : {answer_text}")
-        print("-"*80)
-    print("\n\n")
+    question_only = question.replace('\n', ' ').replace('\r', ' ').strip()
+    hash_question_only = hashlib.sha256(question_only.replace(' ', '').lower().encode('utf-8')).hexdigest()
+    if not hash_question_only in data_table:
+        #print("*"*80)
+        print(f"= \t{question_only}")
+        #print("*"*80)
+        options = div.find_all('div', class_ = 'd-flex w-100')
+        answer_string_list = []
+        for option in options:
+            if None != option.find('i', class_ = 'fa fas fa-check'):
+                check_flag = "+"
+            else:
+                check_flag = "."                    
+            answer_string_list.append((check_flag, option.text))
+            print(f"{check_flag} \t{option.text}")
+            #print("-"*80)
+        data_table[hash_question_only] = (question_only, answer_string_list)
+        print("\n\n")
 
 
 def html_to_tab(html_file):
@@ -53,16 +50,17 @@ def html_to_tab(html_file):
 
 if __name__ == '__main__':
     """
-    Чтение таблиц из HTML файлов в папке и их запись в файл XLSX одной таблицей
+    Чтение строк из HTML файлов в папке и их запись в файл XLSX одной таблицей
     Usage: Html2Excel.py /path file.xlsx
     """
     if len(sys.argv) > 2:
         try:
-            list_files = find_web_files(sys.argv[1])
-            #print(f"Found {len(list_files)} files")
-            for item_file in list_files:
-                html_to_tab(item_file)
-
+            with os.scandir(sys.argv[1]) as it:
+                file_names = [f for f in it if f.is_file() and (f.name.endswith('.html') or f.name.endswith('.htm'))]
+            for file_name in file_names:
+                html_to_tab(file_name)
+            print(f"Found {len(file_names)} files which contain {len(data_table)} unique questions")
+            #print(data_table)
             sys.exit(0)
         except Exception as error:
             print(f"Unexpected error: {error}")
