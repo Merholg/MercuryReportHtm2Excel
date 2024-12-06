@@ -21,14 +21,14 @@ def get_options(div, card_header_text_white):
         answer_string_list = []
         for option in options:
             if None != option.find('i', class_ = 'fa fas fa-check'):
-                check_flag = "+"
+                check_flag = True
             else:
-                check_flag = "."                    
+                check_flag = False                    
             answer_string_list.append((check_flag, option.text))
-            print(f"{check_flag} \t{option.text}")
+            print(("+" if check_flag else "."), f" \t{option.text}")
             #print("-"*80)
         data_table[hash_question_only] = (question_only, answer_string_list)
-        print("\n\n")
+        print(" \t ")
 
 
 def html_to_tab(html_file):
